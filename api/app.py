@@ -7,7 +7,7 @@ app = FastAPI()
 async def index():
     return {'msg' : 'Welcome to my API!'}
 
-@app.get('/authors')
+@app.get('/authors', response_model=List[Author])
 async def get_authors():
     authors = run_with_async(
         lambda session: session.execute(select(Author)).scalars().all()
