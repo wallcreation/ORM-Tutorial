@@ -9,17 +9,18 @@ database_url = "postgresql+asyncpg://postgres.xsoytqvarevowemcjxwo:3!6T!mwLy_g_E
 
 engine = create_async_engine(database_url)
 
-session = AsyncSession(bind=engine, expire_on_commit=False)
+
 
 @asynccontextmanager
 async def session_maker():
+    session = AsyncSession(bind=engine, expire_on_commit=False)
     try:
         yield session
     except Exception as e:
         print("Error:", e)
         await session.rollback()
-    # finally:
-    #     await session.close()
+    finally:
+        await session.close()
 
 async def run_with_async(fun, *args, **kwargs):
     async with session_maker() as session:

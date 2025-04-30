@@ -3,7 +3,6 @@ from typing import Optional, List
 from pydantic import BaseModel
 
 class AuthorsBase(BaseModel):
-
     id: int
     first_name: str
     last_name: str
@@ -11,3 +10,9 @@ class AuthorsBase(BaseModel):
 
     class Config:
         from_attributes = True
+
+class BooksBase(BaseModel):
+    id: int
+    name: str
+    author: str
+    published_at: datetime
