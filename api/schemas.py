@@ -16,3 +16,14 @@ class BooksBase(BaseModel):
     name: str
     author: str
     published_at: datetime
+
+class AuthorsAddBase(BaseModel):
+    first_name: str
+    last_name: str
+    birth_date: datetime
+
+class BooksAddBase(BaseModel):
+    name: str
+    author: str
+    published_at: datetime
+    serial_number: int

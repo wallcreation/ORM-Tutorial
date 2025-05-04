@@ -9,8 +9,6 @@ database_url = "postgresql+asyncpg://postgres.xsoytqvarevowemcjxwo:3!6T!mwLy_g_E
 
 engine = create_async_engine(database_url)
 
-
-
 @asynccontextmanager
 async def session_maker():
     session = AsyncSession(bind=engine, expire_on_commit=False)
