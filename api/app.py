@@ -37,7 +37,7 @@ async def index():
         'total_books' : total_books
         }
 
-@app.get('/authors', response_model=list[schemas.AuthorsBase])
+@app.get('/authors', response_model=list[schemas.AuthorModel])
 async def get_authors():
     authors = await run_with_async(
         lambda session: session.execute(select(Author))
@@ -46,7 +46,7 @@ async def get_authors():
     print(list_of_authors)
     return list_of_authors
 
-@app.get('/books', response_model=list[schemas.BooksBase])
+@app.get('/books', response_model=list[schemas.BookModel])
 async def get_books():
     books = await run_with_async(
         lambda session: session.execute(select(Book))
@@ -73,7 +73,7 @@ async def get_total_books():
     }
 
 @app.post('/add/books')
-async def add_book(book: schemas.BooksAddBase):
+async def add_book(book: schemas.BooksAddModel):
     async with session_maker() as session:
         # 1. Vérifier si le livre existe déjà
         result = await session.execute(
@@ -111,7 +111,7 @@ async def add_book(book: schemas.BooksAddBase):
 
 
 @app.post('/add/author/')
-async def add_author(author: schemas.AuthorsAddBase):
+async def add_author(author: schemas.AuthorsAddModel):
     async with session_maker() as session:
         existing_authors = await session.execute(
             select(Author).filter_by(
