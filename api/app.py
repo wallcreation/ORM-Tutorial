@@ -72,50 +72,6 @@ async def get_total_books():
         'count' : len(books.scalars().all())
     }
 
-# @app.post('/add/books')
-# async def add_book(book: schemas.BooksAddBase):
-#     is_found = await run_with_async(
-#         lambda session: session.execute(
-#             select(Book).filter_by(
-#                 serial_number=book.serial_number
-#             )
-#         )
-#     )
-
-#     print(is_found)
-#     if is_found.scalars().first() is not None:
-#         raise HTTPException(400, 'Book already exist')
-
-#     author_ = book.author.split(' ')
-#     print(author_)
-#     author = await run_with_async(
-#         lambda session: session.execute(
-#             select(Author).filter_by(
-#                 first_name=author_[0],
-#                 last_name=author_[1]
-#             )
-#         )
-#     )
-
-#     author = author.scalars().first()
-#     if author is None:
-#         raise HTTPException(400, "Author not found for this book")
-
-#     new_book = Book(
-#         name=book.name,
-#         author=book.author,
-#         published_at=book.published_at,
-#         serial_number=book.serial_number,
-#         author_ref=author
-#     )
-
-#     async with session_maker() as session:
-#         await session.add(new_book)
-#         await session.commit()
-#         await session.refresh(new_book)
-
-#     return True
-
 @app.post('/add/books')
 async def add_book(book: schemas.BooksAddBase):
     async with session_maker() as session:
@@ -157,7 +113,7 @@ async def add_book(book: schemas.BooksAddBase):
 @app.post('/add/author/')
 async def add_author(author: schemas.AuthorsAddBase):
     async with session_maker() as session:
-        existing_authors = session.execute(
+        existing_authors = await session.execute(
             select(Author).filter_by(
                 first_name=author.first_name,
                 last_name=author.last_name
@@ -166,24 +122,50 @@ async def add_author(author: schemas.AuthorsAddBase):
         if existing_authors.scalars().first():
             return HTTPException(400, "Author already exist")
         
-    
-    # is_found = await run_with_async(
-    #     lambda session: session.execute(
-    #         select(Author).filter_by(
-    #             last_name=author.last_name
-    #             )
-    #         )
-    #     )
+        new_author = Author(
+            first_name=author.first_name,
+            last_name=author.last_name,
+            birth_date=author.birth_date.replace(tzinfo=None)
+        )
+        session.add(new_author)
+        await session.commit()
+        await session.refresh(new_author)
 
-    # if is_found.scalars.first() is not None:
-    #     raise HTTPException(400, 'Author already exist')
+        return {"info" : "Author added", "id": new_author.id}
 
-    # new_author = Author(
-    #     first_name=author.first_name,
-    #     last_name=author.last_name,
-    #     birth_date=author.birth_date
-    # )
-    # await run_with_async(
-    #     lambda session: session.add(new_author)
-    # )
-    # return
+@app.delete('/remove/author/{author_id}')
+async def remove_author(author_id:int):
+    async with session_maker() as session:
+        authors = await session.execute(
+            select(Author).filter(
+                Author.id == author_id
+            )
+        )
+        author = authors.scalars().first()
+        
+        if not author():
+            return HTTPException(404, f"Author with id {author_id} not found.")
+        
+        await session.delete(author)
+        await session.commit()
+
+        return {"info": "Author deleted"}
+
+
+@app.delete('/remove/book/{book_id}')
+async def remove_book(book_id:int):
+    async with session_maker() as session:
+        books = await session.execute(
+            select(Book).filter(
+                Book.id==book_id
+            )
+        )
+        book = books.scalars().first()
+
+        if not book:
+            return HTTPException(404, f"Book with id {book_id} not found.")
+        
+        await session.delete(book)
+        await session.commit()
+
+        return {"info": "Book deleted"}
