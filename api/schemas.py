@@ -22,7 +22,7 @@ class AuthorAddModel(BaseModel):
     last_name: str
     birth_date: datetime
 
-class BooksAddModel(BaseModel):
+class BookAddModel(BaseModel):
     name: str
     author: str
     published_at: datetime
@@ -33,7 +33,7 @@ class AuthorUpdateModel(BaseModel):
     last_name: Optional[str] = None
     birth_date: Optional[datetime] = None
 
-class BooksAddModel(BaseModel):
+class BookUpdateModel(BaseModel):
     name: Optional[str] = None
     author: Optional[str] = None
     published_at: Optional[datetime] = None

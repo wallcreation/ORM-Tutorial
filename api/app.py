@@ -73,7 +73,7 @@ async def get_total_books():
     }
 
 @app.post('/add/books')
-async def add_book(book: schemas.BooksAddModel):
+async def add_book(book: schemas.BookAddModel):
     async with session_maker() as session:
         # 1. Vérifier si le livre existe déjà
         result = await session.execute(
@@ -111,7 +111,7 @@ async def add_book(book: schemas.BooksAddModel):
 
 
 @app.post('/add/author/')
-async def add_author(author: schemas.AuthorsAddModel):
+async def add_author(author: schemas.AuthorAddModel):
     async with session_maker() as session:
         existing_authors = await session.execute(
             select(Author).filter_by(
@@ -120,7 +120,7 @@ async def add_author(author: schemas.AuthorsAddModel):
             )
         )
         if existing_authors.scalars().first():
-            return HTTPException(400, "Author already exist")
+            raise HTTPException(400, "Author already exist")
         
         new_author = Author(
             first_name=author.first_name,
@@ -133,6 +133,63 @@ async def add_author(author: schemas.AuthorsAddModel):
 
         return {"info" : "Author added", "id": new_author.id}
 
+@app.put('/update/author/{author_id}')
+async def update_author(author_id: int, author_update: schemas.AuthorUpdateModel):
+    async with session_maker() as session:
+        authors = await session.execute(
+            select(Author).filter(
+                Author.id == author_id
+            )
+        )
+        author = authors.scalars().first()
+        
+        if not author:
+            raise HTTPException(404, 'Author not found')
+        
+        if author_update.first_name:
+            author.first_name = author_update.first_name
+        
+        if author_update.last_name:
+            author.last_name = author_update.last_name
+        
+        if author_update.birth_date:
+            author.birth_date = author_update.birth_date
+        
+        await session.commit()
+        await session.refresh(author)
+
+        return {'info': 'Author updated'}
+
+@app.put('/update/book/{book_id}')
+async def update_book(book_id: int, book_update: schemas.BookUpdateModel):
+    async with session_maker() as session:
+        books = await session.execute(
+            select(Book).filter(
+                Book.id == book_id
+            )
+        )
+        book = books.scalars().first()
+
+        if not book:
+            raise HTTPException(404, f"Book with id {book_id} not found.")
+        
+        if book_update.name:
+            book.name = book_update.name
+        
+        if book_update.author:
+            book.author = book_update.author
+        
+        if book_update.published_at:
+            book.published_at = book_update.published_at.replace(tzinfo=None)
+
+        if book_update.serial_number:
+            book.serial_number = book_update.serial_number
+        
+        await session.commit()
+        await session.refresh(book)
+
+        return {'info': 'Book updated'}
+
 @app.delete('/remove/author/{author_id}')
 async def remove_author(author_id:int):
     async with session_maker() as session:
@@ -144,7 +201,7 @@ async def remove_author(author_id:int):
         author = authors.scalars().first()
         
         if not author():
-            return HTTPException(404, f"Author with id {author_id} not found.")
+            raise HTTPException(404, f"Author with id {author_id} not found.")
         
         await session.delete(author)
         await session.commit()
@@ -163,7 +220,7 @@ async def remove_book(book_id:int):
         book = books.scalars().first()
 
         if not book:
-            return HTTPException(404, f"Book with id {book_id} not found.")
+            raise HTTPException(404, f"Book with id {book_id} not found.")
         
         await session.delete(book)
         await session.commit()
